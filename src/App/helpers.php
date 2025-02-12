@@ -57,11 +57,11 @@ if (!function_exists('base_path')) {
     /**
      * if the param $path equal false,will return this program current execute directory
      *
-     * @param string|false $path
+     * @param bool|string $path
      *
      * @return string
      */
-    function base_path($path = ''): string
+    function base_path(bool|string $path = ''): string
     {
         if (false === $path) {
             return run_path();
@@ -102,7 +102,7 @@ if (!function_exists('public_path')) {
         } else {
             $prefix = $plugin ? "plugin.$plugin." : '';
             $pathPrefix = $plugin ? 'plugin' . DIRECTORY_SEPARATOR . $plugin . DIRECTORY_SEPARATOR : '';
-            $publicPath = \config("{$prefix}app.public_path", run_path("{$pathPrefix}public"));
+            $publicPath = config("{$prefix}app.public_path", run_path("{$pathPrefix}public"));
             if (count($publicPaths) > 32) {
                 $publicPaths = [];
             }
@@ -259,7 +259,7 @@ if (!function_exists('view')) {
     function view(mixed $template = null, array $vars = [], ?string $app = null, ?string $plugin = null): Response
     {
         [$template, $vars, $app, $plugin] = template_inputs($template, $vars, $app, $plugin);
-        $handler = \config($plugin ? "plugin.$plugin.view.handler" : 'view.handler');
+        $handler = config($plugin ? "plugin.$plugin.view.handler" : 'view.handler');
         return new Response(200, [], $handler::render($template, $vars, $app, $plugin));
     }
 }
@@ -320,9 +320,9 @@ if (!function_exists('request')) {
     /**
      * Get request
      *
-     * @return \Webman\Http\Request|Request|null
+     * @return \T2\Http\Request|Request|null
      */
-    function request()
+    function request(): \T2\Http\Request|Request|null
     {
         return App::request();
     }
@@ -337,7 +337,7 @@ if (!function_exists('config')) {
      *
      * @return mixed
      */
-    function config(?string $key = null, mixed $default = null)
+    function config(?string $key = null, mixed $default = null): mixed
     {
         return Config::get($key, $default);
     }
@@ -358,15 +358,12 @@ if (!function_exists('route')) {
         if (!$route) {
             return '';
         }
-
         if (!$parameters) {
             return $route->url();
         }
-
         if (is_array(current($parameters))) {
             $parameters = current($parameters);
         }
-
         return $route->url($parameters);
     }
 }
@@ -383,7 +380,7 @@ if (!function_exists('session')) {
      */
     function session(array|string|null $key = null, mixed $default = null): mixed
     {
-        $session = \request()->session();
+        $session = request()->session();
         if (null === $key) {
             return $session;
         }
@@ -464,7 +461,7 @@ if (!function_exists('copy_dir')) {
      *
      * @return void
      */
-    function copy_dir(string $source, string $dest, bool $overwrite = false)
+    function copy_dir(string $source, string $dest, bool $overwrite = false): void
     {
         if (is_dir($source)) {
             if (!is_dir($dest)) {
@@ -509,8 +506,10 @@ if (!function_exists('worker_bind')) {
      *
      * @param $worker
      * @param $class
+     *
+     * @return void
      */
-    function worker_bind($worker, $class)
+    function worker_bind($worker, $class): void
     {
         $callbackMap = [
             'onConnect',
@@ -543,7 +542,7 @@ if (!function_exists('worker_start')) {
      *
      * @return void
      */
-    function worker_start($processName, $config)
+    function worker_start($processName, $config): void
     {
         if (isset($config['enable']) && !$config['enable']) {
             return;
@@ -567,15 +566,13 @@ if (!function_exists('worker_start')) {
                 $worker->$property = $config[$property];
             }
         }
-
         $worker->onWorkerStart = function ($worker) use ($config) {
-            require_once base_path('/support/bootstrap.php');
+            require_once base_path('/vendor/phpmarket/t2-framework/src/App/bootstrap.php');
             if (isset($config['handler'])) {
                 if (!class_exists($config['handler'])) {
                     echo "process error: class {$config['handler']} not exists\r\n";
                     return;
                 }
-
                 $instance = Container::make($config['handler'], $config['constructor'] ?? []);
                 worker_bind($worker, $instance);
             }
@@ -593,7 +590,7 @@ if (!function_exists('get_realpath')) {
      */
     function get_realpath(string $filePath): string
     {
-        if (strpos($filePath, 'phar://') === 0) {
+        if (str_starts_with($filePath, 'phar://')) {
             return $filePath;
         } else {
             return realpath($filePath);
