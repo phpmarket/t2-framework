@@ -24,6 +24,7 @@ class Install
         'windows.bat'      => 'windows.bat', // 根目录下的 windows.bat
         'App/Request.php'  => 'app/Request.php', // App 目录下的 Request.php
         'App/Response.php' => 'app/Response.php', // App 目录下的 Response.php
+        'App/Monitor.php'  => 'app/Monitor.php', // App 目录下的 Monitor.php
     ];
 
     /**
