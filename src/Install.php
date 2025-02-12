@@ -61,12 +61,15 @@ class Install
      * 根据路径关系进行文件复制
      *
      * 功能：按照 $pathRelation 中定义的路径关系，
-     *       将源文件复制到目标目录，并在复制后删除源文件
+     *       将源文件复制到目标目录。若目标文件已存在，则跳过复制；
+     *       若不存在，则进行复制，并在复制后删除源文件。
      *
      * 步骤：
      * 1. 遍历 $pathRelation 数组，获取每一对路径关系
      * 2. 检查目标目录是否存在，若不存在则递归创建
-     * 3. 复制源文件到目标目录（可递归复制目录）
+     * 3. 检查目标文件是否已存在
+     *      - 如果已存在，则跳过该文件的复制
+     *      - 如果不存在，则进行文件或目录的复制
      * 4. 输出已创建的目标路径
      * 5. 如果源文件为普通文件，则删除该文件
      * 6. 检查并清空 helpers.php 文件内容
@@ -85,11 +88,19 @@ class Install
                 mkdir($parentDir, 0777, true);  // 0777 权限，允许读写和执行
             }
 
+            // 获取目标文件完整路径
+            $destFile = base_path($dest);
+
+            // 如果目标文件已存在，则跳过该文件的复制
+            if (file_exists($destFile)) {
+                continue;
+            }
+
             // 获取源文件的完整路径
             $sourceFile = __DIR__ . "/$source";
 
             // 复制目录或文件到目标路径（递归复制）
-            copy_dir($sourceFile, base_path($dest), true);
+            copy_dir($sourceFile, $destFile, true);
 
             // 输出复制成功的目标路径
             echo "Create $dest\r\n";
