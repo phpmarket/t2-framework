@@ -19,12 +19,13 @@ class Install
      * 作用：用于在安装时，将源文件复制到目标位置
      */
     protected static array $pathRelation = [
-        'start.php'        => 'start.php', // 根目录下的 start.php
-        'windows.php'      => 'windows.php', // 根目录下的 windows.php
-        'windows.bat'      => 'windows.bat', // 根目录下的 windows.bat
-        'App/Request.php'  => 'app/Request.php', // App 目录下的 Request.php
-        'App/Response.php' => 'app/Response.php', // App 目录下的 Response.php
-        'App/Monitor.php'  => 'app/Monitor.php', // App 目录下的 Monitor.php
+        'start.php'         => 'start.php', // 根目录下的 start.php
+        'windows.php'       => 'windows.php', // 根目录下的 windows.php
+        'windows.bat'       => 'windows.bat', // 根目录下的 windows.bat
+        'App/functions.php' => 'app/functions.php', // App 目录下的 functions.php
+        'App/Request.php'   => 'app/Request.php', // App 目录下的 Request.php
+        'App/Response.php'  => 'app/Response.php', // App 目录下的 Response.php
+        'App/Monitor.php'   => 'app/Monitor.php', // App 目录下的 Monitor.php
     ];
 
     /**
