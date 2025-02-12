@@ -4,7 +4,6 @@ namespace App;
 
 use function defined;
 use function is_callable;
-use function is_file;
 use function method_exists;
 
 class Plugin
@@ -16,12 +15,12 @@ class Plugin
      *
      * @return void
      */
-    public static function install($event)
+    public static function install(mixed $event): void
     {
         static::findHelper();
         $psr4 = static::getPsr4($event);
         foreach ($psr4 as $namespace => $path) {
-            $pluginConst = "\\{$namespace}Install::WEBMAN_PLUGIN";
+            $pluginConst = "\\{$namespace}Install::IS_PLUGIN";
             if (!defined($pluginConst)) {
                 continue;
             }
@@ -39,12 +38,12 @@ class Plugin
      *
      * @return void
      */
-    public static function update($event)
+    public static function update(mixed $event): void
     {
         static::findHelper();
         $psr4 = static::getPsr4($event);
         foreach ($psr4 as $namespace => $path) {
-            $pluginConst = "\\{$namespace}Install::WEBMAN_PLUGIN";
+            $pluginConst = "\\{$namespace}Install::IS_PLUGIN";
             if (!defined($pluginConst)) {
                 continue;
             }
@@ -67,12 +66,12 @@ class Plugin
      *
      * @return void
      */
-    public static function uninstall($event)
+    public static function uninstall(mixed $event): void
     {
         static::findHelper();
         $psr4 = static::getPsr4($event);
         foreach ($psr4 as $namespace => $path) {
-            $pluginConst = "\\{$namespace}Install::WEBMAN_PLUGIN";
+            $pluginConst = "\\{$namespace}Install::IS_PLUGIN";
             if (!defined($pluginConst)) {
                 continue;
             }
@@ -88,9 +87,9 @@ class Plugin
      *
      * @param mixed $event
      *
-     * @return array
+     * @return array|mixed
      */
-    protected static function getPsr4($event)
+    protected static function getPsr4(mixed $event): mixed
     {
         $operation = $event->getOperation();
         $autoload = method_exists($operation, 'getPackage') ? $operation->getPackage()->getAutoload() : $operation->getTargetPackage()->getAutoload();
@@ -102,9 +101,9 @@ class Plugin
      *
      * @return void
      */
-    protected static function findHelper()
+    protected static function findHelper(): void
     {
-        // Plugin.php in webman
+        // Plugin.php in T2Engine
         require_once __DIR__ . '/helpers.php';
     }
 }
