@@ -35,9 +35,12 @@
   },
   "autoload": {
     "psr-4": {
-      "T2\\": "./src"
+      "T2\\": "./src",
+      "App\\": "./src/App"
     },
-    "files": []
+    "files": [
+      "./src/App/helpers.php"
+    ]
   },
   "minimum-stability": "dev",
   "prefer-stable": true
