@@ -21,7 +21,7 @@ class Install
     protected static array $pathRelation = [
         'start.php'         => 'start.php', // 根目录下的 start.php
         'windows.php'       => 'windows.php', // 根目录下的 windows.php
-        'app/bootstrap.php' => 'App/bootstrap.php', // App 目录下的 bootstrap.php
+        'App/bootstrap.php' => 'app/bootstrap.php', // App 目录下的 bootstrap.php
     ];
 
     /**
