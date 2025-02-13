@@ -1,6 +1,6 @@
 <?php
 
-use Dotenv\Dotenv;
+use App\Env;
 use App\Log;
 use T2\Bootstrap;
 use T2\Config;
@@ -10,33 +10,18 @@ use T2\Util;
 use Workerman\Events\Select;
 use Workerman\Worker;
 
-$worker = $worker ?? null;
-
-if (empty(Worker::$eventLoopClass)) {
-    Worker::$eventLoopClass = Select::class;
+// 初始化 Worker 的事件循环机制
+initializeEventLoop();
+// 注册全局错误处理器
+try {
+    setGlobalErrorHandler();
+} catch (ErrorException $e) {
+    echo $e;
 }
-
-set_error_handler(function ($level, $message, $file = '', $line = 0) {
-    if (error_reporting() & $level) {
-        throw new ErrorException($message, 0, $level, $file, $line);
-    }
-});
-
-if ($worker) {
-    register_shutdown_function(function ($startTime) {
-        if (time() - $startTime <= 0.1) {
-            sleep(1);
-        }
-    }, time());
-}
-
-if (class_exists('Dotenv\Dotenv') && file_exists(base_path(false) . '/.env')) {
-    if (method_exists('Dotenv\Dotenv', 'createUnsafeMutable')) {
-        Dotenv::createUnsafeMutable(base_path(false))->load();
-    } else {
-        Dotenv::createMutable(base_path(false))->load();
-    }
-}
+// 注册脚本关闭时的回调
+registerShutdownCallback($worker ?? null);
+// 加载 .env 环境变量文件
+loadEnvironmentVariables(base_path() . DIRECTORY_SEPARATOR . '.env');
 
 Config::clear();
 T2\App::loadAllConfig(['route']);
@@ -132,3 +117,66 @@ foreach (Util::scanDir($directory) as $path) {
     }
 }
 Route::load($paths);
+
+/**
+ * 初始化 Worker 的事件循环机制
+ *
+ * @return void
+ */
+function initializeEventLoop(): void
+{
+    if (empty(Worker::$eventLoopClass)) {
+        Worker::$eventLoopClass = Select::class;
+    }
+}
+
+/**
+ * 注册全局错误处理器
+ *
+ * @return void
+ * @throws ErrorException
+ */
+function setGlobalErrorHandler(): void
+{
+    set_error_handler(function ($level, $message, $file = '', $line = 0) {
+        if (error_reporting() & $level) {
+            throw new ErrorException($message, 0, $level, $file, $line);
+        }
+    });
+}
+
+/**
+ * 注册脚本关闭时的回调
+ *
+ * @param Worker|null $worker
+ *
+ * @return void
+ */
+function registerShutdownCallback(?Worker $worker): void
+{
+    if ($worker) {
+        register_shutdown_function(function ($startTime) {
+            if (time() - $startTime <= 0.1) {
+                sleep(1);
+            }
+        }, time());
+    }
+}
+
+/**
+ * 加载 .env 环境变量文件
+ *
+ * @param string $envPath
+ *
+ * @return void
+ */
+function loadEnvironmentVariables(string $envPath): void
+{
+    if (class_exists(Env::class) && file_exists($envPath) && method_exists(Env::class, 'load')) {
+        try {
+            Env::load($envPath);
+        } catch (Throwable $e) {
+            error_log("Failed to load .env file: " . $e->getMessage());
+        }
+    }
+}
