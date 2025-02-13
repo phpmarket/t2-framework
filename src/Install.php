@@ -5,9 +5,9 @@ namespace T2;
 class Install
 {
     /**
-     * 常量：WEBMAN_PLUGIN
-     * 用于标识当前类是否为 Webman 插件
-     * 值为 true，表示是 Webman 插件
+     * 常量：IS_PLUGIN
+     * 用于标识当前类是否为 T2Engine 插件
+     * 值为 true，表示是 T2Engine 插件
      */
     const IS_PLUGIN = true;
 
