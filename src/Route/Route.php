@@ -43,11 +43,11 @@ class Route
     /**
      * Route constructor.
      *
-     * @param array    $methods
-     * @param string   $path
-     * @param callable $callback
+     * @param array|string $methods
+     * @param string       $path
+     * @param callable     $callback
      */
-    public function __construct(array $methods, string $path, callable $callback)
+    public function __construct(array|string $methods, string $path, callable $callback)
     {
         $this->methods = $methods;
         $this->path = $path;
