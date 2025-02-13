@@ -8,7 +8,6 @@ use T2\Http\Response;
 
 class PageNotFoundException extends NotFoundException
 {
-
     /**
      * @var string
      */
@@ -41,8 +40,7 @@ class PageNotFoundException extends NotFoundException
         $message = $this->trans($this->getMessage(), $data);
         if ($request->expectsJson()) {
             $json = ['code' => $code, 'msg' => $message, 'data' => $data];
-            return new Response(200, ['Content-Type' => 'application/json'],
-                json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            return new Response(200, ['Content-Type' => 'application/json'], json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         }
         return new Response($code, [], $this->html($message));
     }
@@ -62,25 +60,25 @@ class PageNotFoundException extends NotFoundException
             return raw_view($this->template, ['message' => $message])->rawBody();
         }
         return <<<EOF
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>$message</title>
-    <style>
-        .center {
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <h1 class="center">$message</h1>
-    <hr>
-    <div class="center">webman</div>
-</body>
-</html>
-EOF;
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>$message</title>
+                <style>
+                    .center {
+                        text-align: center;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1 class="center">$message</h1>
+                <hr>
+                <div class="center">T2Engine</div>
+            </body>
+            </html>
+        EOF;
     }
 
 }

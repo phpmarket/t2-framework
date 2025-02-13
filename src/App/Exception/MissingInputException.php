@@ -41,8 +41,7 @@ class MissingInputException extends PageNotFoundException
         $message = $this->trans($this->getMessage(), $data);
         if ($request->expectsJson()) {
             $json = ['code' => $code, 'msg' => $message, 'data' => $data];
-            return new Response(200, ['Content-Type' => 'application/json'],
-                json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            return new Response(200, ['Content-Type' => 'application/json'], json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         }
         return new Response($code, [], $this->html($message));
     }
