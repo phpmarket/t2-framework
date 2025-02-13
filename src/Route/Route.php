@@ -16,9 +16,9 @@ class Route
     protected ?string $name = null;
 
     /**
-     * @var array
+     * @var array|string
      */
-    protected array $methods = [];
+    protected array|string $methods = [];
 
     /**
      * @var string
@@ -45,9 +45,9 @@ class Route
      *
      * @param array|string $methods
      * @param string       $path
-     * @param callable     $callback
+     * @param mixed        $callback
      */
-    public function __construct(array|string $methods, string $path, callable $callback)
+    public function __construct(array|string $methods, string $path, mixed $callback)
     {
         $this->methods = $methods;
         $this->path = $path;
