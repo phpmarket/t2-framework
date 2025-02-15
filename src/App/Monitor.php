@@ -9,7 +9,6 @@ use SplFileInfo;
 use Workerman\Timer;
 use Workerman\Worker;
 use function unlink;
-use function is_file;
 use function file_put_contents;
 use function clearstatcache;
 use function file_exists;
@@ -21,9 +20,12 @@ use function time;
 use function exec;
 use function posix_kill;
 use function posix_getppid;
+use function ini_get;
 use function explode;
 use function preg_match;
 use function file_get_contents;
+use function is_dir;
+use function is_file;
 
 class Monitor
 {
@@ -61,7 +63,7 @@ class Monitor
     {
         clearstatcache();
         if (is_file(static::lockFile())) {
-            unlink(static::lockFile());
+            @unlink(static::lockFile());
         }
     }
 
@@ -89,18 +91,18 @@ class Monitor
     /**
      * FileMonitor constructor.
      *
-     * @param       $monitorDir
-     * @param       $monitorExtensions
+     * @param array $monitorDir
+     * @param array $monitorExtensions
      * @param array $options
      */
-    public function __construct($monitorDir, $monitorExtensions, array $options = [])
+    public function __construct(array $monitorDir, array $monitorExtensions, array $options = [])
     {
         static::resume();
-        $this->paths = (array)$monitorDir;
+        $this->paths = $monitorDir;
         $this->extensions = $monitorExtensions;
         foreach (get_included_files() as $index => $file) {
             $this->loadedFiles[$file] = $index;
-            if (strpos($file, 't2-framework/src/support/App.php')) {
+            if (strpos($file, 't2-framework/src/App/App.php')) {
                 break;
             }
         }
@@ -149,9 +151,7 @@ class Monitor
         $count = 0;
         foreach ($iterator as $file) {
             $count++;
-            /**
-             * @var SplFileInfo $file
-             */
+            /** @var SplFileInfo $file */
             if (is_dir($file->getRealPath())) {
                 continue;
             }
