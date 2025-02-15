@@ -9,6 +9,12 @@ use T2\Util;
 use Throwable;
 use Workerman\Connection\TcpConnection;
 use Workerman\Worker;
+use function base_path;
+use function call_user_func;
+use function is_dir;
+use function opcache_get_status;
+use function opcache_invalidate;
+use const DIRECTORY_SEPARATOR;
 
 class Application
 {
@@ -22,7 +28,6 @@ class Application
     {
         ini_set('display_errors', 'on');
         error_reporting(E_ALL);
-
         if (class_exists(Dotenv::class) && file_exists(run_path('.env'))) {
             if (method_exists(Dotenv::class, 'createUnsafeImmutable')) {
                 Dotenv::createUnsafeImmutable(run_path())->load();
@@ -97,35 +102,19 @@ class Application
                     $worker->$property = $config[$property];
                 }
             }
-
             $worker->onWorkerStart = function ($worker) {
                 require_once base_path() . '/vendor/phpmarket/t2-framework/src/App/bootstrap.php';
-                $app = new App(config('app.request_class', Request::class), Log::channel('default'), app_path(), public_path());
+                $app = new App(config('app.request_class', Request::class), Log::channel(), app_path(), public_path());
                 $worker->onMessage = [$app, 'onMessage'];
                 call_user_func([$app, 'onWorkerStart'], $worker);
             };
         }
-
-        // Windows 不支持自定义进程。
+        // Windows does not support custom processes.
         if (DIRECTORY_SEPARATOR === '/') {
             foreach (config('process', []) as $processName => $config) {
                 worker_start($processName, $config);
             }
-            foreach (config('plugin', []) as $firm => $projects) {
-                foreach ($projects as $name => $project) {
-                    if (!is_array($project)) {
-                        continue;
-                    }
-                    foreach ($project['process'] ?? [] as $processName => $config) {
-                        worker_start("plugin.$firm.$name.$processName", $config);
-                    }
-                }
-                foreach ($projects['process'] ?? [] as $processName => $config) {
-                    worker_start("plugin.$firm.$processName", $config);
-                }
-            }
         }
-
         Worker::runAll();
     }
 
