@@ -10,9 +10,6 @@ use Throwable;
 use Workerman\Connection\TcpConnection;
 use Workerman\Worker;
 
-ini_set('display_errors', 'on');
-error_reporting(E_ALL);
-
 class Application
 {
     /**
@@ -23,6 +20,9 @@ class Application
      */
     public static function run(): void
     {
+        ini_set('display_errors', 'on');
+        error_reporting(E_ALL);
+
         if (class_exists(Dotenv::class) && file_exists(run_path('.env'))) {
             if (method_exists(Dotenv::class, 'createUnsafeImmutable')) {
                 Dotenv::createUnsafeImmutable(run_path())->load();
@@ -30,7 +30,6 @@ class Application
                 Dotenv::createMutable(run_path())->load();
             }
         }
-
         if (!$appConfigFile = config_path('app.php')) {
             throw new RuntimeException('Config file not found: app.php');
         }
@@ -38,33 +37,27 @@ class Application
         if ($timezone = $appConfig['default_timezone'] ?? '') {
             date_default_timezone_set($timezone);
         }
-
         static::loadAllConfig(['route', 'container']);
-
         if (DIRECTORY_SEPARATOR === '\\' && empty(config('server.listen'))) {
             echo "Please run 'php windows.php' on windows system." . PHP_EOL;
             exit;
         }
-
         $errorReporting = config('app.error_reporting');
         if (isset($errorReporting)) {
             error_reporting($errorReporting);
         }
-
         $runtimeLogsPath = runtime_path() . DIRECTORY_SEPARATOR . 'logs';
         if (!file_exists($runtimeLogsPath) || !is_dir($runtimeLogsPath)) {
             if (!mkdir($runtimeLogsPath, 0777, true)) {
                 throw new RuntimeException("Failed to create runtime logs directory. Please check the permission.");
             }
         }
-
         $runtimeViewsPath = runtime_path() . DIRECTORY_SEPARATOR . 'views';
         if (!file_exists($runtimeViewsPath) || !is_dir($runtimeViewsPath)) {
             if (!mkdir($runtimeViewsPath, 0777, true)) {
                 throw new RuntimeException("Failed to create runtime views directory. Please check the permission.");
             }
         }
-
         Worker::$onMasterReload = function () {
             if (function_exists('opcache_get_status')) {
                 if ($status = opcache_get_status()) {
@@ -76,7 +69,6 @@ class Application
                 }
             }
         };
-
         $config = config('server');
         Worker::$pidFile = $config['pid_file'];
         Worker::$stdoutFile = $config['stdout_file'];
@@ -89,7 +81,6 @@ class Application
         if (property_exists(Worker::class, 'stopTimeout')) {
             Worker::$stopTimeout = $config['stop_timeout'] ?? 2;
         }
-
         if ($config['listen'] ?? false) {
             $worker = new Worker($config['listen'], $config['context']);
             $propertyMap = [
@@ -109,13 +100,13 @@ class Application
 
             $worker->onWorkerStart = function ($worker) {
                 require_once base_path() . '/vendor/phpmarket/t2-framework/src/App/bootstrap.php';
-                $app = new App(config('app.request_class', Request::class), Log::channel(), app_path(), public_path());
+                $app = new App(config('app.request_class', Request::class), Log::channel('default'), app_path(), public_path());
                 $worker->onMessage = [$app, 'onMessage'];
                 call_user_func([$app, 'onWorkerStart'], $worker);
             };
         }
 
-        // Windows does not App custom processes.
+        // Windows 不支持自定义进程。
         if (DIRECTORY_SEPARATOR === '/') {
             foreach (config('process', []) as $processName => $config) {
                 worker_start($processName, $config);
