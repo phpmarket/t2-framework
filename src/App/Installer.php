@@ -9,23 +9,6 @@ use function method_exists;
 class Installer
 {
     /**
-     * @param mixed $event
-     *
-     * @return void
-     */
-    public static function handlePackageInstall(mixed $event): void
-    {
-        // 获取当前安装的包名
-        $installedPackage = $event->getOperation()->getPackage()->getName();
-        $targetPackage = "phpmarket/t2-framework"; // 替换为你的插件包名
-        // 仅当安装目标包时执行逻辑
-        if ($installedPackage === $targetPackage) {
-            // 调用实际安装逻辑（可以是私有方法）
-            self::install($event);
-        }
-    }
-
-    /**
      * Install.
      *
      * @param mixed $event
@@ -37,7 +20,7 @@ class Installer
         static::findHelper();
         $psr4 = static::getPsr4($event);
         foreach ($psr4 as $namespace => $path) {
-            $pluginConst = "\\{$namespace}Install::IS_PLUGIN";
+            $pluginConst = "\\{$namespace}Install::IS_INSTALL";
             if (!defined($pluginConst)) {
                 continue;
             }
@@ -60,7 +43,7 @@ class Installer
         static::findHelper();
         $psr4 = static::getPsr4($event);
         foreach ($psr4 as $namespace => $path) {
-            $pluginConst = "\\{$namespace}Install::IS_PLUGIN";
+            $pluginConst = "\\{$namespace}Install::IS_INSTALL";
             if (!defined($pluginConst)) {
                 continue;
             }
@@ -88,7 +71,7 @@ class Installer
         static::findHelper();
         $psr4 = static::getPsr4($event);
         foreach ($psr4 as $namespace => $path) {
-            $pluginConst = "\\{$namespace}Install::IS_PLUGIN";
+            $pluginConst = "\\{$namespace}Install::IS_INSTALL";
             if (!defined($pluginConst)) {
                 continue;
             }
