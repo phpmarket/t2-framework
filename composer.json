@@ -43,12 +43,15 @@
   },
   "scripts": {
     "post-package-install": [
+      "echo 'Installing T2 Framework...'",
       "App\\Installer::install"
     ],
     "post-package-update": [
+      "echo 'Updating T2 Framework...'",
       "App\\Installer::install"
     ],
     "pre-package-uninstall": [
+      "echo 'Uninstalling T2 Framework...'",
       "App\\Installer::uninstall"
     ]
   },
