@@ -6,7 +6,7 @@ use function defined;
 use function is_callable;
 use function method_exists;
 
-class Plugin
+class Installer
 {
     /**
      * Install.
@@ -103,7 +103,7 @@ class Plugin
      */
     protected static function findHelper(): void
     {
-        // Plugin.php in T2Engine
+        // Installer.php in T2Engine
         require_once __DIR__ . '/helpers.php';
     }
 }
