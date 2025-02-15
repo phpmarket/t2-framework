@@ -1,6 +1,7 @@
 <?php
 
 use App\Container;
+use App\Env;
 use App\Request;
 use App\Response;
 use App\Translation;
@@ -15,6 +16,26 @@ use T2\Config;
 use T2\Route;
 use Workerman\Protocols\Http\Session;
 use Workerman\Worker;
+
+if (!function_exists('loadEnvironmentVariables')) {
+    /**
+     * 加载 .env 环境变量文件
+     *
+     * @param string $envPath
+     *
+     * @return void
+     */
+    function loadEnvironmentVariables(string $envPath): void
+    {
+        if (class_exists(Env::class) && file_exists($envPath) && method_exists(Env::class, 'load')) {
+            try {
+                Env::load($envPath);
+            } catch (Throwable $e) {
+                error_log("Failed to load .env file: " . $e->getMessage());
+            }
+        }
+    }
+}
 
 /**
  * Get the base path of the application

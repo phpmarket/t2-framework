@@ -1,6 +1,5 @@
 <?php
 
-use App\Env;
 use App\Log;
 use T2\Bootstrap;
 use T2\Config;
@@ -89,24 +88,6 @@ function registerShutdownCallback(?Worker $worker): void
                 sleep(1);
             }
         }, time());
-    }
-}
-
-/**
- * 加载 .env 环境变量文件
- *
- * @param string $envPath
- *
- * @return void
- */
-function loadEnvironmentVariables(string $envPath): void
-{
-    if (class_exists(Env::class) && file_exists($envPath) && method_exists(Env::class, 'load')) {
-        try {
-            Env::load($envPath);
-        } catch (Throwable $e) {
-            error_log("Failed to load .env file: " . $e->getMessage());
-        }
     }
 }
 

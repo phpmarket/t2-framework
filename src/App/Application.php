@@ -28,13 +28,8 @@ class Application
     {
         ini_set('display_errors', 'on');
         error_reporting(E_ALL);
-        if (class_exists(Dotenv::class) && file_exists(run_path('.env'))) {
-            if (method_exists(Dotenv::class, 'createUnsafeImmutable')) {
-                Dotenv::createUnsafeImmutable(run_path())->load();
-            } else {
-                Dotenv::createMutable(run_path())->load();
-            }
-        }
+        // 加载 .env 环境变量文件
+        loadEnvironmentVariables(base_path() . DIRECTORY_SEPARATOR . '.env');
         if (!$appConfigFile = config_path('app.php')) {
             throw new RuntimeException('Config file not found: app.php');
         }
