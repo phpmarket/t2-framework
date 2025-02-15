@@ -22,16 +22,14 @@ try {
 registerShutdownCallback($worker ?? null);
 // 加载 .env 环境变量文件
 loadEnvironmentVariables(base_path() . DIRECTORY_SEPARATOR . '.env');
-
+// 清空配置缓存并加载应用配置
 Config::clear();
 T2\App::loadAllConfig(['route']);
-if ($timezone = config('app.default_timezone')) {
-    date_default_timezone_set($timezone);
-}
+// 设置默认时区
+setDefaultTimezone(config('app.default_timezone'));
+// 自动加载配置中定义的文件
+autoloadFiles(config('autoload.files', []));
 
-foreach (config('autoload.files', []) as $file) {
-    include_once $file;
-}
 foreach (config('plugin', []) as $firm => $projects) {
     foreach ($projects as $name => $project) {
         if (!is_array($project)) {
@@ -178,5 +176,33 @@ function loadEnvironmentVariables(string $envPath): void
         } catch (Throwable $e) {
             error_log("Failed to load .env file: " . $e->getMessage());
         }
+    }
+}
+
+/**
+ * 设置默认时区
+ *
+ * @param string|null $timezone
+ *
+ * @return void
+ */
+function setDefaultTimezone(?string $timezone): void
+{
+    if ($timezone) {
+        date_default_timezone_set($timezone);
+    }
+}
+
+/**
+ * 自动加载指定文件
+ *
+ * @param array $files
+ *
+ * @return void
+ */
+function autoloadFiles(array $files): void
+{
+    foreach ($files as $file) {
+        include_once $file;
     }
 }
