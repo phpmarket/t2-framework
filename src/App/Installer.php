@@ -20,17 +20,17 @@ class Installer
         static::findHelper();
         $installedPackage = $event->getOperation()->getPackage()->getName();
         echo $installedPackage;
-        $psr4 = static::getPsr4($event);
-        foreach ($psr4 as $namespace => $path) {
-            $pluginConst = "\\{$namespace}Install::IS_PLUGIN";
-            if (!defined($pluginConst)) {
-                continue;
-            }
-            $installFunction = "\\{$namespace}Install::install";
-            if (is_callable($installFunction)) {
-                $installFunction(true);
-            }
-        }
+//        $psr4 = static::getPsr4($event);
+//        foreach ($psr4 as $namespace => $path) {
+//            $pluginConst = "\\{$namespace}Install::IS_PLUGIN";
+//            if (!defined($pluginConst)) {
+//                continue;
+//            }
+//            $installFunction = "\\{$namespace}Install::install";
+//            if (is_callable($installFunction)) {
+//                $installFunction(true);
+//            }
+//        }
     }
 
     /**
