@@ -5,6 +5,7 @@ use T2\Bootstrap;
 use T2\Config;
 use T2\Middleware;
 use T2\Route;
+use T2\Util;
 use Workerman\Events\Select;
 use Workerman\Worker;
 
@@ -43,7 +44,7 @@ foreach (config('bootstrap', []) as $className) {
      */
     $className::start($worker ?? null);;
 }
-$paths = [config_path()];
+$paths = collectRoute();
 Route::load($paths);
 
 /**
@@ -117,4 +118,26 @@ function autoloadFiles(array $files): void
     foreach ($files as $file) {
         include_once $file;
     }
+}
+
+/**
+ * 收集路由目录
+ *
+ * @return array
+ */
+function collectRoute(): array
+{
+    $paths = [base_path('route')]; // 根目录下的route
+    $directory = base_path() . '/app';
+    $appDirectories = Util::scanDir($directory, false);
+    // 遍历应用目录
+    foreach ($appDirectories as $appName) {
+        $appPath = "$directory/$appName";
+        $routeDir = "$appPath/route";
+        // route目录是否存在
+        if (is_dir($routeDir)) {
+            $paths[] = $routeDir;
+        }
+    }
+    return $paths;
 }
