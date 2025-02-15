@@ -128,6 +128,7 @@ function autoloadFiles(array $files): void
 function collectRoute(): array
 {
     $paths = [base_path('route')]; // 根目录下的route
+    $paths[] = web_path() . '/route';
     $directory = base_path() . '/app';
     $appDirectories = Util::scanDir($directory, false);
     // 遍历应用目录
