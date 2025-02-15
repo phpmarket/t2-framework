@@ -599,7 +599,7 @@ if (!function_exists('worker_start')) {
         $worker->name = $processName;
         foreach ($properties as $property) {
             if (isset($config[$property])) {
-                $worker->$property = $config[$property];
+                $worker->$property = (int)$config[$property];
             }
         }
         $worker->onWorkerStart = function ($worker) use ($config) {
