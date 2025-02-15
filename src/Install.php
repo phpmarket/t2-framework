@@ -4,7 +4,7 @@ namespace T2;
 
 class Install
 {
-    const IS_INSTALL = true;
+    const bool IS_INSTALL = true;
 
     /**
      * @var array $pathRelation
