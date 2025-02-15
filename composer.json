@@ -41,20 +41,6 @@
       "./src/App/helpers.php"
     ]
   },
-  "scripts": {
-    "pre-install-cmd": [
-      "echo 'Before installing T2 Framework...'",
-      "App\\Installer::install"
-    ],
-    "post-install-cmd": [
-      "echo 'After installing T2 Framework...'",
-      "App\\Installer::install"
-    ],
-    "post-package-install": [
-      "echo 'Package installed.'",
-      "App\\Installer::install"
-    ]
-  },
   "minimum-stability": "dev",
   "prefer-stable": true
 }
