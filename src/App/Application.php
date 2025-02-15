@@ -9,7 +9,7 @@ use Throwable;
 use Workerman\Connection\TcpConnection;
 use Workerman\Worker;
 
-class App
+class Application
 {
     /**
      * Run.

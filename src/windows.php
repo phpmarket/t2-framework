@@ -3,7 +3,7 @@ chdir(__DIR__);
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Dotenv\Dotenv;
-use App\App;
+use App\Application;
 
 ini_set('display_errors', 'on');
 error_reporting(E_ALL);
@@ -16,7 +16,7 @@ if (class_exists('Dotenv\Dotenv') && file_exists(base_path() . '/.env')) {
     }
 }
 
-App::loadAllConfig(['route']);
+Application::loadAllConfig(['route']);
 
 $errorReporting = config('app.error_reporting');
 if (isset($errorReporting)) {
@@ -68,7 +68,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 use Workerman\Worker;
 use Workerman\Connection\TcpConnection;
 use Webman\Config;
-use support\App;
+use App\Application;
 
 ini_set('display_errors', 'on');
 error_reporting(E_ALL);
@@ -85,7 +85,7 @@ if (\$timezone = \$appConfig['default_timezone'] ?? '') {
     date_default_timezone_set(\$timezone);
 }
 
-App::loadAllConfig(['route']);
+Application::loadAllConfig(['route']);
 
 worker_start('$processParam', $configParam);
 
