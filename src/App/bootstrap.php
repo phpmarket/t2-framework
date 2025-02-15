@@ -23,7 +23,7 @@ registerShutdownCallback($worker ?? null);
 loadEnvironmentVariables(base_path() . DIRECTORY_SEPARATOR . '.env');
 // 清空配置缓存并加载应用配置
 Config::clear();
-T2\App::loadAllConfig(['route']);
+App\App::loadAllConfig(['route']);
 // 设置默认时区
 setDefaultTimezone(config('app.default_timezone'));
 // 自动加载配置中定义的文件
