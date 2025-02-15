@@ -6,7 +6,6 @@ use T2\Bootstrap;
 use T2\Config;
 use T2\Middleware;
 use T2\Route;
-use T2\Util;
 use Workerman\Events\Select;
 use Workerman\Worker;
 
@@ -29,36 +28,10 @@ T2\App::loadAllConfig(['route']);
 setDefaultTimezone(config('app.default_timezone'));
 // 自动加载配置中定义的文件
 autoloadFiles(config('autoload.files', []));
-
-foreach (config('plugin', []) as $firm => $projects) {
-    foreach ($projects as $name => $project) {
-        if (!is_array($project)) {
-            continue;
-        }
-        foreach ($project['autoload']['files'] ?? [] as $file) {
-            include_once $file;
-        }
-    }
-    foreach ($projects['autoload']['files'] ?? [] as $file) {
-        include_once $file;
-    }
-}
-
+// 加载全局中间件
 Middleware::load(config('middleware', []));
-foreach (config('plugin', []) as $firm => $projects) {
-    foreach ($projects as $name => $project) {
-        if (!is_array($project) || $name === 'static') {
-            continue;
-        }
-        Middleware::load($project['middleware'] ?? []);
-    }
-    Middleware::load($projects['middleware'] ?? [], $firm);
-    if ($staticMiddlewares = config("plugin.$firm.static.middleware")) {
-        Middleware::load(['__static__' => $staticMiddlewares], $firm);
-    }
-}
+// 加载全局处理静态文件中间件
 Middleware::load(['__static__' => config('static.middleware', [])]);
-
 foreach (config('bootstrap', []) as $className) {
     if (!class_exists($className)) {
         $log = "Warning: Class $className setting in config/bootstrap.php not found\r\n";
@@ -69,51 +42,9 @@ foreach (config('bootstrap', []) as $className) {
     /**
      * @var Bootstrap $className
      */
-    $className::start($worker);
+    $className::start($worker ?? null);;
 }
-
-foreach (config('plugin', []) as $firm => $projects) {
-    foreach ($projects as $name => $project) {
-        if (!is_array($project)) {
-            continue;
-        }
-        foreach ($project['bootstrap'] ?? [] as $className) {
-            if (!class_exists($className)) {
-                $log = "Warning: Class $className setting in config/plugin/$firm/$name/bootstrap.php not found\r\n";
-                echo $log;
-                Log::error($log);
-                continue;
-            }
-            /**
-             * @var Bootstrap $className
-             */
-            $className::start($worker);
-        }
-    }
-    foreach ($projects['bootstrap'] ?? [] as $className) {
-        /**
-         * @var string $className
-         */
-        if (!class_exists($className)) {
-            $log = "Warning: Class $className setting in plugin/$firm/config/bootstrap.php not found\r\n";
-            echo $log;
-            Log::error($log);
-            continue;
-        }
-        /**
-         * @var Bootstrap $className
-         */
-        $className::start($worker);
-    }
-}
-
-$directory = base_path() . '/plugin';
 $paths = [config_path()];
-foreach (Util::scanDir($directory) as $path) {
-    if (is_dir($path = "$path/config")) {
-        $paths[] = $path;
-    }
-}
 Route::load($paths);
 
 /**
