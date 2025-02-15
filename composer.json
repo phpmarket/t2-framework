@@ -42,17 +42,17 @@
     ]
   },
   "scripts": {
+    "pre-install-cmd": [
+      "echo 'Before installing T2 Framework...'",
+      "App\\Installer::install"
+    ],
+    "post-install-cmd": [
+      "echo 'After installing T2 Framework...'",
+      "App\\Installer::install"
+    ],
     "post-package-install": [
-      "echo 'Installing T2 Framework...'",
+      "echo 'Package installed.'",
       "App\\Installer::install"
-    ],
-    "post-package-update": [
-      "echo 'Updating T2 Framework...'",
-      "App\\Installer::install"
-    ],
-    "pre-package-uninstall": [
-      "echo 'Uninstalling T2 Framework...'",
-      "App\\Installer::uninstall"
     ]
   },
   "minimum-stability": "dev",
