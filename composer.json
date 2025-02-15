@@ -1,6 +1,6 @@
 {
   "name": "phpmarket/t2-framework",
-  "type": "project",
+  "type": "library",
   "keywords": [
     "high performance",
     "http service"
