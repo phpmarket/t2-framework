@@ -84,6 +84,21 @@ if (!function_exists('app_path')) {
     }
 }
 
+if (!function_exists('web_path')) {
+    /**
+     * Web path
+     * T2Engine phpmarket/t2-website package
+     *
+     * @param string $path
+     *
+     * @return string
+     */
+    function web_path(string $path = ''): string
+    {
+        return path_combine(BASE_PATH . DIRECTORY_SEPARATOR . 'web', $path);
+    }
+}
+
 if (!function_exists('public_path')) {
     /**
      * Public path
