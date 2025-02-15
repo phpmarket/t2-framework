@@ -18,6 +18,8 @@ class Installer
     public static function install(mixed $event): void
     {
         static::findHelper();
+        $installedPackage = $event->getOperation()->getPackage()->getName();
+        echo $installedPackage;
         $psr4 = static::getPsr4($event);
         foreach ($psr4 as $namespace => $path) {
             $pluginConst = "\\{$namespace}Install::IS_PLUGIN";
