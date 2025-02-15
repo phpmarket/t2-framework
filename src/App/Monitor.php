@@ -159,7 +159,7 @@ class Monitor
             if (in_array($file->getExtension(), $this->extensions, true) && $lastMtime < $file->getMTime()) {
                 $lastMtime = $file->getMTime();
                 if (DIRECTORY_SEPARATOR === '/' && isset($this->loadedFiles[$file->getRealPath()])) {
-                    echo "$file updated but cannot be reloaded because only auto-loaded files App reload.\n";
+                    echo "$file updated but cannot be reloaded because only auto-loaded files support reload.\n";
                     continue;
                 }
                 $var = 0;
