@@ -191,7 +191,7 @@ class App
      * @return void
      * @throws Throwable
      */
-    public static function run()
+    public static function run(): void
     {
         ini_set('display_errors', 'on');
         error_reporting(E_ALL);
@@ -282,7 +282,7 @@ class App
 
             $worker->onWorkerStart = function ($worker) {
                 require_once base_path() . '/support/bootstrap.php';
-                $app = new \T2\App(config('app.request_class', \App\Request::class), Log::channel('default'), app_path(), public_path());
+                $app = new App(config('app.request_class', \App\Request::class), Log::channel(), app_path(), public_path());
                 $worker->onMessage = [$app, 'onMessage'];
                 call_user_func([$app, 'onWorkerStart'], $worker);
             };
@@ -338,7 +338,7 @@ class App
      *
      * @return void
      */
-    protected static function collectCallbacks(string $key, array $data)
+    protected static function collectCallbacks(string $key, array $data): void
     {
         static::$callbacks[$key] = $data;
         if (count(static::$callbacks) >= 1024) {
