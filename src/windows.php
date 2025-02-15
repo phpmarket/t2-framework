@@ -3,7 +3,7 @@ chdir(__DIR__);
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Dotenv\Dotenv;
-use T2\App;
+use App\App;
 
 ini_set('display_errors', 'on');
 error_reporting(E_ALL);
