@@ -18,7 +18,7 @@ use function substr;
 /**
  * Class Translation
  *
- * @package support
+ * @package App
  * @method static string trans(?string $id, array $parameters = [], string $domain = null, string $locale = null)
  * @method static void setLocale(string $locale)
  * @method static string getLocale()
@@ -59,9 +59,9 @@ class Translation
                 ]
             ];
             foreach ($paths as $path) {
-                // Phar support. Compatible with the 'realpath' function in the phar file.
+                // Phar App. Compatible with the 'realpath' function in the phar file.
                 if (!$translationsPath = get_realpath($path)) {
-                    throw new NotFoundException("File {$path} not found");
+                    throw new NotFoundException("File $path not found");
                 }
 
                 foreach ($classes as $class => $opts) {

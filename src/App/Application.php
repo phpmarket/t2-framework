@@ -3,6 +3,7 @@
 namespace App;
 
 use RuntimeException;
+use T2\App;
 use T2\Config;
 use T2\Util;
 use Throwable;
@@ -107,14 +108,14 @@ class Application
             }
 
             $worker->onWorkerStart = function ($worker) {
-                require_once base_path() . '/support/bootstrap.php';
-                $app = new \T2\App(config('app.request_class', Request::class), Log::channel(), app_path(), public_path());
+                require_once base_path() . '/vendor/phpmarket/t2-framework/src/App/bootstrap.php';
+                $app = new App(config('app.request_class', Request::class), Log::channel(), app_path(), public_path());
                 $worker->onMessage = [$app, 'onMessage'];
                 call_user_func([$app, 'onWorkerStart'], $worker);
             };
         }
 
-        // Windows does not support custom processes.
+        // Windows does not App custom processes.
         if (DIRECTORY_SEPARATOR === '/') {
             foreach (config('process', []) as $processName => $config) {
                 worker_start($processName, $config);

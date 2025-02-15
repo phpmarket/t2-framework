@@ -143,7 +143,7 @@ class Install
      *
      * 正则表达式解释：
      * - `^\s*`：匹配行首的空白字符
-     * - `support\\\\bootstrap\\\\LaravelDb::class`：匹配 LaravelDb 配置项
+     * - `App\\\\bootstrap\\\\LaravelDb::class`：匹配 LaravelDb 配置项
      * - `,?\s*?`：匹配逗号和后续空白字符（可选）
      * - `\r?\n`：匹配换行符（兼容 Windows 和 Unix）
      *

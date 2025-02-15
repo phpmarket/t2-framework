@@ -678,7 +678,7 @@ if (!function_exists('cpu_count')) {
      */
     function cpu_count(): int
     {
-        // Windows does not support the number of processes setting.
+        // Windows does not App the number of processes setting.
         if (DIRECTORY_SEPARATOR === '\\') {
             return 1;
         }

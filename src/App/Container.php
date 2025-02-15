@@ -7,7 +7,7 @@ use T2\Config;
 /**
  * Class Container
  *
- * @package support
+ * @package App
  * @method static mixed get($name)
  * @method static mixed make($name, array $parameters)
  * @method static bool has($name)

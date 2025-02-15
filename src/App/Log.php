@@ -13,7 +13,7 @@ use function is_array;
 /**
  * Class Log
  *
- * @package support
+ * @package App
  *
  * @method static void log($level, $message, array $context = [])
  * @method static void debug($message, array $context = [])

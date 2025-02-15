@@ -211,7 +211,7 @@ class Env implements ArrayAccess
      */
     public function offsetUnset(mixed $offset): void
     {
-        throw new Exception('not support: unset');
+        throw new Exception('not App: unset');
     }
 
     public function offsetGet(mixed $offset): mixed
