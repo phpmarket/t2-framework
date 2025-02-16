@@ -20,7 +20,6 @@ class Install
         'App/functions.php' => 'app/functions.php', // App 目录下的 functions.php
         'App/Request.php'   => 'app/Request.php', // App 目录下的 Request.php
         'App/Response.php'  => 'app/Response.php', // App 目录下的 Response.php
-        'App/Monitor.php'   => 'app/Monitor.php', // App 目录下的 Monitor.php
     ];
 
     /**
