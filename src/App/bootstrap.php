@@ -23,7 +23,7 @@ registerShutdownCallback($worker ?? null);
 loadEnvironmentVariables(base_path() . DIRECTORY_SEPARATOR . '.env');
 // 清空配置缓存并加载应用配置
 Config::clear();
-App\Application::loadAllConfig(['route']);
+App\Application::loadAllConfig();
 // 设置默认时区
 setDefaultTimezone(config('app.default_timezone'));
 // 自动加载配置中定义的文件
@@ -44,8 +44,7 @@ foreach (config('bootstrap', []) as $className) {
      */
     $className::start($worker ?? null);;
 }
-$paths = collectRoute();
-Route::load($paths);
+loadRoute(); // 加载路由
 
 /**
  * 初始化 Worker 的事件循环机制
@@ -121,24 +120,50 @@ function autoloadFiles(array $files): void
 }
 
 /**
- * 收集路由目录
+ * 加载路由
  *
- * @return array
+ * @return void
  */
-function collectRoute(): array
+function loadRoute()
 {
-    $paths = [base_path('route')]; // 根目录下的route
-    $paths[] = web_path() . '/route';
-    $directory = base_path() . '/app';
-    $appDirectories = Util::scanDir($directory, false);
-    // 遍历应用目录
+    // 路由配置
+    $config = config('route', []);
+    if ($config['fallback']) {
+        $fallbackHandler = strtolower($config['fallback_handler']); // 将 fallback_handler 转为大写，避免大小写问题
+
+        switch ($fallbackHandler) {
+            case 'json':
+                Route::fallback(function () {
+                    return json(['code' => 404, 'msg' => '404 not found']);
+                });
+                break;
+            case '/':
+                Route::fallback(function () {
+                    return redirect('/');
+                });
+                break;
+            default: // 中间件处理
+                if (class_exists($config['fallback_handler'])) {
+                    Route::fallback(function () {
+                        return json(['code' => 404, 'msg' => '404 not found']);
+                    })->middleware([$config['fallback_handler']]);
+                } else {
+                    Log::error("Class '{$config['fallback_handler']}' not found for route fallback handler" . "\n", []);
+                    echo "Error: Class '{$config['fallback_handler']}' not found for route fallback handler" . "\n";
+                }
+        }
+    }
+
+    // 路由路径配置
+    $paths = [base_path('route'), web_path() . '/route'];
+    // 获取所有应用目录的 route 路径
+    $appDirectories = Util::scanDir(base_path('/app'), false);
     foreach ($appDirectories as $appName) {
-        $appPath = "$directory/$appName";
-        $routeDir = "$appPath/route";
-        // route目录是否存在
+        $routeDir = base_path("/app/$appName/route");
         if (is_dir($routeDir)) {
             $paths[] = $routeDir;
         }
     }
-    return $paths;
+    // 加载所有路由路径
+    Route::load($paths);
 }
