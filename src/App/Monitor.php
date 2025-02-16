@@ -102,7 +102,7 @@ class Monitor
         $this->extensions = $monitorExtensions;
         foreach (get_included_files() as $index => $file) {
             $this->loadedFiles[$file] = $index;
-            if (strpos($file, 't2-framework/src/App/App.php')) {
+            if (strpos($file, 't2-framework/src/App/Application.php')) {
                 break;
             }
         }
