@@ -2,13 +2,10 @@
 
 namespace T2;
 
-use FastRoute\Dispatcher\GroupCountBased;
+use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
-use FilesystemIterator;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
@@ -32,69 +29,69 @@ use function strpos;
 class Route
 {
     /**
-     * @var Route
+     * @var ?Route
      */
-    protected static $instance = null;
+    protected static ?Route $instance = null;
 
     /**
-     * @var GroupCountBased
+     * @var ?Dispatcher
      */
-    protected static $dispatcher = null;
+    protected static ?Dispatcher $dispatcher = null;
 
     /**
-     * @var RouteCollector
+     * @var ?RouteCollector
      */
-    protected static $collector = null;
+    protected static ?RouteCollector $collector = null;
 
     /**
      * @var RouteObject[]
      */
-    protected static $fallbackRoutes = [];
+    protected static array $fallbackRoutes = [];
 
     /**
      * @var array
      */
-    protected static $fallback = [];
+    protected static array $fallback = [];
 
     /**
      * @var array
      */
-    protected static $nameList = [];
+    protected static array $nameList = [];
 
     /**
      * @var string
      */
-    protected static $groupPrefix = '';
+    protected static string $groupPrefix = '';
 
     /**
-     * @var bool
+     * @var array|bool
      */
-    protected static $disabledDefaultRoutes = [];
-
-    /**
-     * @var array
-     */
-    protected static $disabledDefaultRouteControllers = [];
+    protected static array|bool $disabledDefaultRoutes = [];
 
     /**
      * @var array
      */
-    protected static $disabledDefaultRouteActions = [];
+    protected static array $disabledDefaultRouteControllers = [];
+
+    /**
+     * @var array
+     */
+    protected static array $disabledDefaultRouteActions = [];
 
     /**
      * @var RouteObject[]
      */
-    protected static $allRoutes = [];
+    protected static array $allRoutes = [];
 
     /**
      * @var RouteObject[]
      */
-    protected $routes = [];
+    protected array $routes = [];
 
     /**
      * @var Route[]
      */
-    protected $children = [];
+    protected array $children = [];
 
     /**
      * @param string         $path
@@ -102,7 +99,7 @@ class Route
      *
      * @return RouteObject
      */
-    public static function get(string $path, $callback): RouteObject
+    public static function get(string $path, mixed $callback): RouteObject
     {
         return static::addRoute('GET', $path, $callback);
     }
@@ -113,7 +110,7 @@ class Route
      *
      * @return RouteObject
      */
-    public static function post(string $path, $callback): RouteObject
+    public static function post(string $path, mixed $callback): RouteObject
     {
         return static::addRoute('POST', $path, $callback);
     }
@@ -124,7 +121,7 @@ class Route
      *
      * @return RouteObject
      */
-    public static function put(string $path, $callback): RouteObject
+    public static function put(string $path, mixed $callback): RouteObject
     {
         return static::addRoute('PUT', $path, $callback);
     }
@@ -135,7 +132,7 @@ class Route
      *
      * @return RouteObject
      */
-    public static function patch(string $path, $callback): RouteObject
+    public static function patch(string $path, mixed $callback): RouteObject
     {
         return static::addRoute('PATCH', $path, $callback);
     }
@@ -146,7 +143,7 @@ class Route
      *
      * @return RouteObject
      */
-    public static function delete(string $path, $callback): RouteObject
+    public static function delete(string $path, mixed $callback): RouteObject
     {
         return static::addRoute('DELETE', $path, $callback);
     }
@@ -157,7 +154,7 @@ class Route
      *
      * @return RouteObject
      */
-    public static function head(string $path, $callback): RouteObject
+    public static function head(string $path, mixed $callback): RouteObject
     {
         return static::addRoute('HEAD', $path, $callback);
     }
@@ -168,7 +165,7 @@ class Route
      *
      * @return RouteObject
      */
-    public static function options(string $path, $callback): RouteObject
+    public static function options(string $path, mixed $callback): RouteObject
     {
         return static::addRoute('OPTIONS', $path, $callback);
     }
@@ -179,7 +176,7 @@ class Route
      *
      * @return RouteObject
      */
-    public static function any(string $path, $callback): RouteObject
+    public static function any(string $path, mixed $callback): RouteObject
     {
         return static::addRoute(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'], $path, $callback);
     }
@@ -191,18 +188,18 @@ class Route
      *
      * @return RouteObject
      */
-    public static function add($method, string $path, $callback): RouteObject
+    public static function add($method, string $path, mixed $callback): RouteObject
     {
         return static::addRoute($method, $path, $callback);
     }
 
     /**
-     * @param string|callable $path
+     * @param callable|string $path
      * @param callable|null   $callback
      *
      * @return static
      */
-    public static function group($path, ?callable $callback = null): Route
+    public static function group(callable|string $path, ?callable $callback = null): Route
     {
         if ($callback === null) {
             $callback = $path;
@@ -215,9 +212,7 @@ class Route
         static::$collector->addGroup($path, $callback);
         static::$groupPrefix = $previousGroupPrefix;
         static::$instance = $previousInstance;
-        if ($previousInstance) {
-            $previousInstance->addChild($instance);
-        }
+        $previousInstance?->addChild($instance);
         return $instance;
     }
 
@@ -228,14 +223,14 @@ class Route
      *
      * @return void
      */
-    public static function resource(string $name, string $controller, array $options = [])
+    public static function resource(string $name, string $controller, array $options = []): void
     {
         $name = trim($name, '/');
         if (is_array($options) && !empty($options)) {
             $diffOptions = array_diff($options, ['index', 'create', 'store', 'update', 'show', 'edit', 'destroy', 'recovery']);
             if (!empty($diffOptions)) {
                 foreach ($diffOptions as $action) {
-                    static::any("/$name/{$action}[/{id}]", [$controller, $action])->name("$name.{$action}");
+                    static::any("/$name/{$action}[/{id}]", [$controller, $action])->name("$name.$action");
                 }
             }
             // 注册路由 由于顺序不同会导致路由无效 因此不适用循环注册
@@ -378,8 +373,10 @@ class Route
 
     /**
      * @param RouteObject $route
+     *
+     * @return void
      */
-    public function collect(RouteObject $route)
+    public function collect(RouteObject $route): void
     {
         $this->routes[] = $route;
     }
@@ -387,8 +384,10 @@ class Route
     /**
      * @param string      $name
      * @param RouteObject $instance
+     *
+     * @return void
      */
-    public static function setByName(string $name, RouteObject $instance)
+    public static function setByName(string $name, RouteObject $instance): void
     {
         static::$nameList[$name] = $instance;
     }
@@ -408,7 +407,7 @@ class Route
      *
      * @return void
      */
-    public function addChild(Route $route)
+    public function addChild(Route $route): void
     {
         $this->children[] = $route;
     }
@@ -416,7 +415,7 @@ class Route
     /**
      * @return Route[]
      */
-    public function getChildren()
+    public function getChildren(): array
     {
         return $this->children;
     }
@@ -438,7 +437,7 @@ class Route
      *
      * @return callable|false|string[]
      */
-    public static function convertToCallable(string $path, $callback)
+    public static function convertToCallable(string $path, mixed $callback): array|callable|false
     {
         if (is_string($callback) && strpos($callback, '@')) {
             $callback = explode('@', $callback, 2);
@@ -466,7 +465,7 @@ class Route
      *
      * @return RouteObject
      */
-    protected static function addRoute($methods, string $path, $callback): RouteObject
+    protected static function addRoute(array|string $methods, string $path, mixed $callback): RouteObject
     {
         $route = new RouteObject($methods, static::$groupPrefix . $path, $callback);
         static::$allRoutes[] = $route;
@@ -474,9 +473,7 @@ class Route
         if ($callback = static::convertToCallable($path, $callback)) {
             static::$collector->addRoute($methods, $path, ['callback' => $callback, 'route' => $route]);
         }
-        if (static::$instance) {
-            static::$instance->collect($route);
-        }
+        static::$instance?->collect($route);
         return $route;
     }
 
@@ -487,7 +484,7 @@ class Route
      *
      * @return void
      */
-    public static function load($paths)
+    public static function load(mixed $paths): void
     {
         if (!is_array($paths)) {
             return;
@@ -498,25 +495,6 @@ class Route
                 $routeConfigFile = $configPath . '/route.php';
                 if (is_file($routeConfigFile)) {
                     require_once $routeConfigFile;
-                }
-                if (!is_dir($pluginConfigPath = $configPath . '/plugin')) {
-                    continue;
-                }
-                $dirIterator = new RecursiveDirectoryIterator($pluginConfigPath, FilesystemIterator::FOLLOW_SYMLINKS);
-                $iterator = new RecursiveIteratorIterator($dirIterator);
-                foreach ($iterator as $file) {
-                    if ($file->getBaseName('.php') !== 'route') {
-                        continue;
-                    }
-                    $appConfigFile = pathinfo($file, PATHINFO_DIRNAME) . '/app.php';
-                    if (!is_file($appConfigFile)) {
-                        continue;
-                    }
-                    $appConfig = include $appConfigFile;
-                    if (empty($appConfig['enable'])) {
-                        continue;
-                    }
-                    require_once $file;
                 }
             }
         });
@@ -529,20 +507,20 @@ class Route
      *
      * @return void
      */
-    public static function setCollector(RouteCollector $route)
+    public static function setCollector(RouteCollector $route): void
     {
         static::$collector = $route;
     }
 
     /**
-     * Fallback.
+     * Fallback
      *
-     * @param callable|mixed $callback
-     * @param string         $plugin
+     * @param callable $callback
+     * @param string   $plugin
      *
-     * @return void
+     * @return RouteObject
      */
-    public static function fallback(callable $callback, string $plugin = '')
+    public static function fallback(callable $callback, string $plugin = ''): RouteObject
     {
         $route = new RouteObject([], '', $callback);
         static::$fallbackRoutes[$plugin] = $route;
@@ -560,23 +538,13 @@ class Route
      * @throws NotFoundExceptionInterface
      * @throws ReflectionException
      */
-    public static function getFallback(string $plugin = '', int $status = 404)
+    public static function getFallback(string $plugin = '', int $status = 404): ?callable
     {
         if (!isset(static::$fallback[$plugin])) {
-            $callback = null;
             $route = static::$fallbackRoutes[$plugin] ?? null;
             static::$fallback[$plugin] = $route ? App::getCallback($plugin, 'NOT_FOUND', $route->getCallback(), ['status' => $status], false, $route) : null;
         }
         return static::$fallback[$plugin];
-    }
-
-    /**
-     * @return void
-     * @deprecated
-     */
-    public static function container()
-    {
-
     }
 
 }

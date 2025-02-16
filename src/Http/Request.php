@@ -21,6 +21,11 @@ class Request extends \Workerman\Protocols\Http\Request
     public ?string $plugin = null;
 
     /**
+     * @var string|null
+     */
+    public ?string $web = null;
+
+    /**
      * @var ?string
      */
     public ?string $app = null;

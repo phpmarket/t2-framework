@@ -128,7 +128,7 @@ class App
             $path = $request->path();
             $key = $request->method() . $path;
             if (isset(static::$callbacks[$key])) {
-                [$callback, $request->plugin, $request->app, $request->controller, $request->action, $request->route] = static::$callbacks[$key];
+                [$callback, $request->web, $request->app, $request->controller, $request->action, $request->route] = static::$callbacks[$key];
                 static::send($connection, $callback($request), $request);
                 return null;
             }
@@ -143,12 +143,12 @@ class App
             }
 
             $controllerAndAction = static::parseControllerAction($path);
-            $plugin = $controllerAndAction['plugin'] ?? static::getPluginByPath($path);
-            if (!$controllerAndAction || Route::isDefaultRouteDisabled($plugin, $controllerAndAction['app'] ?: '*') ||
+            $web = $controllerAndAction['web'] ?? static::getWebByPath($path);
+            if (!$controllerAndAction || Route::isDefaultRouteDisabled($web, $controllerAndAction['app'] ?: '*') ||
                 Route::isDefaultRouteDisabled($controllerAndAction['controller']) ||
                 Route::isDefaultRouteDisabled([$controllerAndAction['controller'], $controllerAndAction['action']])) {
-                $request->plugin = $plugin;
-                $callback = static::getFallback($plugin, $status);
+                $request->web = $web;
+                $callback = static::getFallback($web, $status);
                 $request->app = $request->controller = $request->action = '';
                 static::send($connection, $callback($request), $request);
                 return null;
@@ -156,9 +156,9 @@ class App
             $app = $controllerAndAction['app'];
             $controller = $controllerAndAction['controller'];
             $action = $controllerAndAction['action'];
-            $callback = static::getCallback($plugin, $app, [$controller, $action]);
-            static::collectCallbacks($key, [$callback, $plugin, $app, $controller, $action, null]);
-            [$callback, $request->plugin, $request->app, $request->controller, $request->action, $request->route] = static::$callbacks[$key];
+            $callback = static::getCallback($web, $app, [$controller, $action]);
+            static::collectCallbacks($key, [$callback, $web, $app, $controller, $action, null]);
+            [$callback, $request->web, $request->app, $request->controller, $request->action, $request->route] = static::$callbacks[$key];
             static::send($connection, $callback($request), $request);
         } catch (Throwable $e) {
             static::send($connection, static::exceptionResponse($e, $request), $request);
@@ -656,15 +656,15 @@ class App
             }
             if (is_array($callback)) {
                 $controller = $callback[0];
-                $plugin = static::getPluginByClass($controller);
+                $web = static::getWebByClass($controller);
                 $app = static::getAppByController($controller);
                 $action = static::getRealMethod($controller, $callback[1]) ?? '';
             } else {
-                $plugin = static::getPluginByPath($path);
+                $web = static::getWebByPath($path);
             }
-            $callback = static::getCallback($plugin, $app, $callback, $args, true, $route);
-            static::collectCallbacks($key, [$callback, $plugin, $app, $controller ?: '', $action, $route]);
-            [$callback, $request->plugin, $request->app, $request->controller, $request->action, $request->route] = static::$callbacks[$key];
+            $callback = static::getCallback($web, $app, $callback, $args, true, $route);
+            static::collectCallbacks($key, [$callback, $web, $app, $controller ?: '', $action, $route]);
+            [$callback, $request->web, $request->app, $request->controller, $request->action, $request->route] = static::$callbacks[$key];
             static::send($connection, $callback($request), $request);
             return true;
         }
@@ -758,79 +758,113 @@ class App
     }
 
     /**
-     * ParseControllerAction
+     * 解析控制器和操作方法
      *
-     * @param string $path
+     * @param string $path 请求的 URL 路径
      *
-     * @return array|false|mixed
+     * @return array|false|mixed 返回解析后的控制器和方法，或 false 表示解析失败
      * @throws ReflectionException
      */
     protected static function parseControllerAction(string $path): mixed
     {
+        // 替换路径中的连字符和多余的斜杠
         $path = str_replace(['-', '//'], ['', '/'], $path);
+        // 静态缓存，用于提高性能
         static $cache = [];
         if (isset($cache[$path])) {
+            // 如果存在该路径的解析结果，则直接返回
             return $cache[$path];
         }
+        // 将路径按斜杠分割为数组
         $pathExplode = explode('/', trim($path, '/'));
-        $isPlugin = isset($pathExplode[1]) && $pathExplode[0] === 'app';
-        $configPrefix = $isPlugin ? "plugin.$pathExplode[1]." : '';
-        $pathPrefix = $isPlugin ? "/app/$pathExplode[1]" : '';
-        $classPrefix = $isPlugin ? "plugin\\$pathExplode[1]" : '';
-        $suffix = Config::get("{$configPrefix}app.controller_suffix", '');
+        // 判断是否是 t2-website 应用
+        $isWebsite = isset($pathExplode[1]) && $pathExplode[0] === 'web';
+        // 配置前缀，例如：web.
+        $configPrefix = $isWebsite ? "$pathExplode[0]." : '';
+        // 路径前缀，例如：/web
+        $pathPrefix = $isWebsite ? "/web" : "/app/$pathExplode[1]";
+        // 类名前缀，例如：web
+        $classPrefix = $isWebsite ? "web" : "app\\$pathExplode[1]";
+        // 获取控制器后缀，例如：Controller
+        $suffix = Config::get("{$configPrefix}controller_suffix", '');
+        // 获取相对路径（去掉前缀部分）
         $relativePath = trim(substr($path, strlen($pathPrefix)), '/');
+        // 重新分割路径
         $pathExplode = $relativePath ? explode('/', $relativePath) : [];
-
+        // 默认方法名为 index
         $action = 'index';
+        // 尝试猜测控制器和方法
         if (!$controllerAction = static::guessControllerAction($pathExplode, $action, $suffix, $classPrefix)) {
+            // 如果第一次猜测失败，并且路径部分不超过 1 个，则返回 false
             if (count($pathExplode) <= 1) {
                 return false;
             }
+            // 如果路径部分超过 1 个，则将最后一个部分作为方法名
             $action = end($pathExplode);
+            // 移除最后一个部分
             unset($pathExplode[count($pathExplode) - 1]);
+            // 再次猜测控制器和方法
             $controllerAction = static::guessControllerAction($pathExplode, $action, $suffix, $classPrefix);
         }
+        // 如果成功解析，并且路径长度不超过 256 字符，则进行缓存
         if ($controllerAction && !isset($path[256])) {
             $cache[$path] = $controllerAction;
+            // 缓存超过 1024 项时，移除最早的一项
             if (count($cache) > 1024) {
                 unset($cache[key($cache)]);
             }
         }
+        // 返回解析结果
         return $controllerAction;
     }
 
     /**
-     * GuessControllerAction.
+     * 猜测控制器和操作方法
      *
-     * @param $pathExplode
-     * @param $action
-     * @param $suffix
-     * @param $classPrefix
+     * @param array  $pathExplode 路径分割后的数组
+     * @param string $action      方法名（默认 index）
+     * @param string $suffix      控制器类名后缀（例如：Controller）
+     * @param string $classPrefix 类名前缀
      *
-     * @return array|false
+     * @return array|false 返回解析后的控制器类名和方法，若无法解析则返回 false
      * @throws ReflectionException
      */
     protected static function guessControllerAction($pathExplode, $action, $suffix, $classPrefix): false|array
     {
-        $map[] = trim("$classPrefix\\app\\controller\\" . implode('\\', $pathExplode), '\\');
+        // 构建类名映射数组
+        $map = [];
+        // 第一种情况：直接拼接路径，例如 app\controller\demo
+        $map[] = trim("$classPrefix\\controller\\" . implode('\\', $pathExplode), '\\');
+        // 遍历路径部分，尝试在每一部分后面加上 'controller'
+        // 例如：app\demo\controller\index 或 app\demo\controller
         foreach ($pathExplode as $index => $section) {
+            // 临时数组，复制当前路径部分
             $tmp = $pathExplode;
+            // 在当前部分后面加上 'controller'
             array_splice($tmp, $index, 1, [$section, 'controller']);
+            // 拼接完整的类名，并添加到映射数组中
             $map[] = trim("$classPrefix\\" . implode('\\', array_merge(['app'], $tmp)), '\\');
         }
+        // 为每种类名再尝试加上 'index' 作为默认控制器
         foreach ($map as $item) {
             $map[] = $item . '\\index';
         }
+        // 遍历所有可能的类名
         foreach ($map as $controllerClass) {
-            // Remove xx\xx\controller
+            // 如果类名以 \controller 结尾，则跳过
+            // 这是为了防止重复，例如：app\demo\controller\controller
             if (str_ends_with($controllerClass, '\\controller')) {
                 continue;
             }
+            // 在类名后面加上控制器后缀（例如：Controller）
             $controllerClass .= $suffix;
+            // 尝试获取控制器类和对应的方法
             if ($controllerAction = static::getControllerAction($controllerClass, $action)) {
+                // 如果找到则返回数组形式 [类名, 方法名]
                 return $controllerAction;
             }
         }
+        // 如果都未找到，则返回 false
         return false;
     }
 
@@ -851,7 +885,7 @@ class App
         }
         if (($controllerClass = static::getController($controllerClass)) && ($action = static::getAction($controllerClass, $action))) {
             return [
-                'plugin'     => static::getPluginByClass($controllerClass),
+                'web'        => static::getWebByClass($controllerClass),
                 'app'        => static::getAppByController($controllerClass),
                 'controller' => $controllerClass,
                 'action'     => $action
@@ -874,7 +908,7 @@ class App
             return (new ReflectionClass($controllerClass))->name;
         }
         $explodes = explode('\\', strtolower(ltrim($controllerClass, '\\')));
-        $basePath = $explodes[0] === 'plugin' ? BASE_PATH . '/plugin' : static::$appPath;
+        $basePath = $explodes[0] === 'web' ? BASE_PATH . '/web' : static::$appPath;
         unset($explodes[0]);
         $fileName = array_pop($explodes) . '.php';
         $found = true;
@@ -942,41 +976,41 @@ class App
     }
 
     /**
-     * GetPluginByClass
+     * getWebByClass
      *
      * @param string $controllerClass
      *
      * @return string
      */
-    public static function getPluginByClass(string $controllerClass): string
+    public static function getWebByClass(string $controllerClass): string
     {
         $controllerClass = trim($controllerClass, '\\');
         $tmp = explode('\\', $controllerClass, 3);
-        if ($tmp[0] !== 'plugin') {
+        if ($tmp[0] !== 'web') {
             return '';
         }
-        return $tmp[1] ?? '';
+        return $tmp[0] ?? '';
     }
 
     /**
-     * GetPluginByPath
+     * getWebByPath
      *
      * @param string $path
      *
      * @return string
      */
-    public static function getPluginByPath(string $path): string
+    public static function getWebByPath(string $path): string
     {
         $path = trim($path, '/');
         $tmp = explode('/', $path, 3);
-        if ($tmp[0] !== 'app') {
+        if ($tmp[0] !== 'web') {
             return '';
         }
-        $plugin = $tmp[1] ?? '';
-        if ($plugin && !static::config('', "plugin.$plugin.app")) {
+        $web = $tmp[0] ?? '';
+        if ($web && !static::config('', "$web")) {
             return '';
         }
-        return $plugin;
+        return $web;
     }
 
     /**
@@ -990,11 +1024,10 @@ class App
     {
         $controllerClass = trim($controllerClass, '\\');
         $tmp = explode('\\', $controllerClass, 5);
-        $pos = $tmp[0] === 'plugin' ? 3 : 1;
-        if (!isset($tmp[$pos])) {
+        if (!isset($tmp[1])) {
             return '';
         }
-        return strtolower($tmp[$pos]) === 'controller' ? '' : $tmp[$pos];
+        return strtolower($tmp[1]) === 'controller' ? '' : $tmp[1];
     }
 
     /**

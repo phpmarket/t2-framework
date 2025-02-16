@@ -2,6 +2,7 @@
 
 namespace App;
 
+use T2\App;
 use T2\Config;
 
 /**
@@ -34,7 +35,7 @@ class Container
      */
     public static function __callStatic(string $name, array $arguments)
     {
-        $plugin = \T2\App::getPluginByClass($name);
+        $plugin = App::getWebByClass($name);
         return static::instance($plugin)->{$name}(... $arguments);
     }
 

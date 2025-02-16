@@ -119,7 +119,7 @@ class Route
      *
      * @return callable|null
      */
-    public function getCallback()
+    public function getCallback(): ?callable
     {
         return $this->callback;
     }
@@ -142,7 +142,7 @@ class Route
      *
      * @return mixed
      */
-    public function param(?string $name = null, mixed $default = null)
+    public function param(?string $name = null, mixed $default = null): mixed
     {
         if ($name === null) {
             return $this->params;

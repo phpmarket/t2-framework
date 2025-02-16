@@ -124,13 +124,12 @@ function autoloadFiles(array $files): void
  *
  * @return void
  */
-function loadRoute()
+function loadRoute(): void
 {
     // 路由配置
     $config = config('route', []);
     if ($config['fallback']) {
         $fallbackHandler = strtolower($config['fallback_handler']); // 将 fallback_handler 转为大写，避免大小写问题
-
         switch ($fallbackHandler) {
             case 'json':
                 Route::fallback(function () {
@@ -153,7 +152,6 @@ function loadRoute()
                 }
         }
     }
-
     // 路由路径配置
     $paths = [base_path('route'), web_path() . '/route'];
     // 获取所有应用目录的 route 路径
